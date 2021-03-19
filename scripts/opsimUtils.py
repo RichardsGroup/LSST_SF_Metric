@@ -82,7 +82,7 @@ def ddfInfo(opsimdb, ddfName):
         ddfInfo = {}
         propInfo = opsimdb.fetchPropInfo()[0]
         ddfInfo['proposalId'] = [key for key, elem in propInfo.items() if
-                                 elem[3:3+len(ddfName)] == '{}'.format(ddfName)]
+                                 ddfName in elem]
         ddfInfo['Coord'] = ddfCoord[ddfName]
         return ddfInfo
 
@@ -347,7 +347,7 @@ def plotSummaryBar(resultDbs, metricName, summaryStatName, runNames=None, **kwar
     
 def plotSummaryBarh(resultDbs, metricName, summaryStatName, runNames=None, **kwargs):
     '''
-    Generate bar plot using summary statistics for comparison between opSims.
+    Generate horizontal bar plot using summary statistics for comparison between opSims.
 
     Args:
         resultDbs(dict): A dictionary of resultDb, keys are run names.
@@ -503,7 +503,7 @@ def key_match(bundleDicts, metricKey, src_run=None, resultDbs=None):
             metricKeys[run] = None
         
         # 1st check if keyName unique
-        if (len(names) == len(np.unique(names))):
+        elif (len(names) == len(np.unique(names))):
             keys = [*bundleDicts[run].keys()]
             metricKeys[run] = [elem for elem in keys if elem[1] 
                                == metricKey[1]][0]
