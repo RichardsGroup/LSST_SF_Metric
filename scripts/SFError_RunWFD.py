@@ -68,10 +68,12 @@ def run_fbs(version, dbDir, outDir, metricDataPath):
     
     # create a bundle dict
     bundleDict = {}
-    for gmag in [22, 24]:
+    my_bins = np.logspace(-2, np.log10(3650), 16)
+    my_weights = np.full(15, 1/15)
+    for gmag in [24]:
 
         # declare metric, slicer and sql contraint
-        sf_metricG = SFErrorMetric(gmag, 'g')
+        sf_metricG = SFErrorMetric(gmag, 'g', bins=my_bins, weight=my_weights)
         slicer = slicers.HealpixSlicer(nside=64)
         constraintG = 'filter = "g"'
         constraintG += ' and note not like "DD%"'
@@ -86,7 +88,7 @@ def run_fbs(version, dbDir, outDir, metricDataPath):
 
         # declare u band metric
         umag = gmag + 0.15
-        sf_metricU = SFErrorMetric(umag, 'u')
+        sf_metricU = SFErrorMetric(umag, 'u', bins=my_bins, weight=my_weights)
         constraintU = 'filter = "u"'
         constraintU += ' and note not like "DD%"'
         constraintU += ' and proposalId = 1'
@@ -107,13 +109,24 @@ def run_fbs(version, dbDir, outDir, metricDataPath):
     rt = []
     rt = Parallel(n_jobs=14)(delayed(run_mg)(run, bundleDict, dbDir, outDir, metricDataPath) 
                              for run in dbRuns)
-
+    
     # check failed 
     failed_runs = [x for x in rt if len(x) > 0]
 
-    with open(f'v{version}.log', 'a') as f:
-        for run in failed_runs:
-            f.write(run+'\n')
+    # rerun failed ones caused sql I/O error
+    for run in failed_runs:
+        print(f'Rerun failed: {run}')
+        print('-------------------------------------')
+        try:
+            run_mg(run, bundleDict, dbDir, outDir, metricDataPath)
+            failed_runs.remove(run)
+        except:
+            continue
+            
+    if len(failed_runs) > 0:
+        with open(f'v{version}_SF_WFD.log', 'a') as f:
+            for run in failed_runs:
+                f.write(run+'\n')
 
 #     notify.send(f"Done with FBS_v{version}!")
     
