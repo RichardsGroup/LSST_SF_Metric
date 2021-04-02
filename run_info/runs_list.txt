@@ -1,4 +1,6 @@
 agnddf_v1.5_10yrs
+alt_dust_v1.5_10yrs
+alt_roll_mod2_dust_sdf_0.20_v1.5_10yrs
 barebones_nexp2_v1.6_10yrs
 barebones_v1.6_10yrs
 baseline_2snaps_v1.5_10yrs
@@ -87,6 +89,7 @@ pair_times_22_v1.7_10yrs
 pair_times_33_v1.7_10yrs
 pair_times_44_v1.7_10yrs
 pair_times_55_v1.7_10yrs
+roll_mod2_dust_sdf_0.20_v1.5_10yrs
 rolling_exgal_mod2_dust_sdf_0.80_nexp2_v1.6_10yrs
 rolling_exgal_mod2_dust_sdf_0.80_v1.6_10yrs
 rolling_nm_scale0.2_nslice2_v1.7_10yrs
