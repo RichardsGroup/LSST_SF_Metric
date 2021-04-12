@@ -1,3 +1,6 @@
+"""
+A stacker to compute photometric errors.
+"""
 from lsst.sims.maf.stackers import BaseStacker
 import numpy as np
 

@@ -1,3 +1,6 @@
+"""
+Run the SFErrorMetric in the WFD survey on all opsims. 
+"""
 import pandas as pd
 import numpy as np
 import os, sys
@@ -56,7 +59,7 @@ def run_sf_ddf(run, src_mags, dbDir, outDir, metricDataPath, **kwargs):
         bundleDict = {}
 
         # shared configs
-        slicer = slicers.HealpixSlicer(nside=256)
+        slicer = slicers.HealpixSlicer(nside=128)
         base_constraint = 'filter = "{}"'
         summaryMetrics = [metrics.MedianMetric(), metrics.MeanMetric(), metrics.RmsMetric()]
 
@@ -92,7 +95,6 @@ def run_sf_ddf(run, src_mags, dbDir, outDir, metricDataPath, **kwargs):
             bundleDict[key].setSummaryMetrics(summaryMetrics)
     
 
-#     try:
         # make a group
         metricGroup = metricBundles.MetricBundleGroup(bundleDict, opSimDb[run], 
                                                       metricDataPath, 
@@ -126,13 +128,13 @@ def run_fbs(version, dbDir, outDir, metricDataPath):
     dbRuns = show_opsims(dbDir)[:]
     
     # define metric parameters for DDF
-    src_mags = {'u': [24.15], 'g': [24]}
+    src_mags = {'u':[23.15], 'g':[23],'r': [22.75]}
     my_bins = np.logspace(-2, np.log10(3650), 21)
     my_weights = np.full(20, 1/20)
 
     # placeholder for joblib returned result
     rt = []
-    rt = Parallel(n_jobs=15)(delayed(run_sf_ddf)(run, src_mags, dbDir, 
+    rt = Parallel(n_jobs=14)(delayed(run_sf_ddf)(run, src_mags, dbDir, 
                                                  outDir, metricDataPath,
                                                  bins=my_bins, weight=my_weights) 
                              for run in dbRuns)
@@ -140,9 +142,22 @@ def run_fbs(version, dbDir, outDir, metricDataPath):
     # check failed 
     failed_runs = [x for x in rt if len(x) > 0]
 
-    with open(f'v{version}_DDF.log', 'a') as f:
-        for run in failed_runs:
-            f.write(run+'\n')
+    # rerun failed ones caused sql I/O error
+    for run in failed_runs:
+        print(f'Rerun failed: {run}')
+        print('-------------------------------------')
+        try:
+            run_sf_ddf(run, src_mags, dbDir, outDir, metricDataPath,
+                      bins=my_bins, weight=my_weights)
+            failed_runs.remove(run)
+        except:
+            continue
+    
+    # if still some fails remained, log it
+    if len(failed_runs) > 0:
+        with open(f'v{version}_SF_DDF.log', 'a') as f:
+            for run in failed_runs:
+                f.write(run+'\n')
 
     notify.send(f"Done with SF_DDF FBS_v{version}!")
     
@@ -159,6 +174,6 @@ if __name__ == "__main__":
     outDir = os.path.join(outputFolder, 'ResultDBs')
     metricDataPath = os.path.join(outputFolder, 'MetricData')
     
-    for version in versions[1:]:
+    for version in versions[:]:
         dbDir = dbDir_temp.format(version)
         run_fbs(version, dbDir, outDir, metricDataPath)

@@ -1,3 +1,6 @@
+"""
+Convinience Functions to facilitate running MAF on SciServer.
+"""
 import glob
 import os
 import numpy as np

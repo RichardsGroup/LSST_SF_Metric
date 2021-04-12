@@ -1,6 +1,12 @@
+"""
+Run the SFErrorMetric in the DDFs on all opsims. 
+"""
 import pandas as pd
 import numpy as np
 import os, sys
+
+from notify_run import Notify
+notify = Notify()
 
 # import lsst.sim.maf moduels modules
 import lsst.sims.maf.db as db
@@ -66,42 +72,37 @@ def run_fbs(version, dbDir, outDir, metricDataPath):
     if not os.path.exists(os.path.abspath(metricDataPath)):
         os.makedirs(os.path.abspath(metricDataPath))
     
-    # create a bundle dict
-    bundleDict = {}
+    # define metric parameters for WFD
+    src_mags = {'u':[23.15], 'g':[23],'r': [22.75]}
     my_bins = np.logspace(-2, np.log10(3650), 16)
     my_weights = np.full(15, 1/15)
-    for gmag in [24]:
+    
+    # create a bundle dict
+    bundleDict = {}
+    
+    # shared configs
+    slicer = slicers.HealpixSlicer(nside=64)
+    base_constraint = 'filter = "{}"'
+    summaryMetrics = [metrics.MedianMetric(), metrics.MeanMetric(), metrics.RmsMetric()]
+    
+    
+    # loop through bands and source mags to init metricBundle & add to bundledict
+    for band in src_mags:
+        mags = src_mags[band]
+        for mag in mags:
 
-        # declare metric, slicer and sql contraint
-        sf_metricG = SFErrorMetric(gmag, 'g', bins=my_bins, weight=my_weights)
-        slicer = slicers.HealpixSlicer(nside=64)
-        constraintG = 'filter = "g"'
-        constraintG += ' and note not like "DD%"'
-        constraintG += ' and proposalId = 1'
+            # declare metric, slicer and sql contraint
+            sf_metric = SFErrorMetric(mag, band, bins=my_bins, weight=my_weights)
+            constraint = base_constraint.format(band) +  ' and note not like "DD%"'
+            constraint += ' and proposalId = 1'
 
-        # make a bundle
-        SF_mbG = metricBundles.MetricBundle(sf_metricG, slicer, constraintG, 
-                                            stackerList=[MagErrStacker(gmag)])
-        summaryMetrics = [metrics.MedianMetric(), metrics.MeanMetric(), 
-                          metrics.RmsMetric()]
-        SF_mbG.setSummaryMetrics(summaryMetrics)
+            # make a bundle
+            sf_mb = metricBundles.MetricBundle(sf_metric, slicer, constraint, 
+                                               stackerList=[MagErrStacker(mag)])
 
-        # declare u band metric
-        umag = gmag + 0.15
-        sf_metricU = SFErrorMetric(umag, 'u', bins=my_bins, weight=my_weights)
-        constraintU = 'filter = "u"'
-        constraintU += ' and note not like "DD%"'
-        constraintU += ' and proposalId = 1'
+            sf_mb.setSummaryMetrics(summaryMetrics)
+            bundleDict[sf_metric.name] = sf_mb
 
-        # make a bundle
-        SF_mbU = metricBundles.MetricBundle(sf_metricU, slicer, constraintU, 
-                                            stackerList=[MagErrStacker(umag)])
-        SF_mbU.setSummaryMetrics(summaryMetrics)
-
-        # put into dict
-        bundleDict[sf_metricG.metricName] = SF_mbG
-        bundleDict[sf_metricU.metricName] = SF_mbU
-        
     # get all runs
     dbRuns = show_opsims(dbDir)[:]
 
@@ -128,7 +129,7 @@ def run_fbs(version, dbDir, outDir, metricDataPath):
             for run in failed_runs:
                 f.write(run+'\n')
 
-#     notify.send(f"Done with FBS_v{version}!")
+    notify.send(f"Done with FBS_v{version}!")
     
     
 if __name__ == "__main__":

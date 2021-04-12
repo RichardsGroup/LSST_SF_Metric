@@ -1,3 +1,6 @@
+"""
+The AGN Metric (SFErrorMetric) run/tested in this repo.
+"""
 import numpy as np
 from astropy.stats import mad_std
 from lsst.sims.maf.metrics import BaseMetric
