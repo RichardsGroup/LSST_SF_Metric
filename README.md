@@ -1,4 +1,6 @@
-# LSST_SF_Metric
+## LSST_SF_Metric
+Weixiang Yu (Drexel University), Gordon T. Richards (Drexel University)
+
 We provide the code/notebooks used in producing the results shown in the "LSST AGN SC Cadence Note: Non-Parametric Structure Function Metric" submitted to the LSST SCOC on April 15th 2021. 
 
 ### Quick Access:
