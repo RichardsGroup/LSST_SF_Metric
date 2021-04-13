@@ -1,3 +1,6 @@
+"""
+Module consists of functions to make radar plots. From https://github.com/lsst-pst/survey_strategy/tree/master/fbs_1.7
+"""
 import numpy as np
 import matplotlib.pylab as plt
 
