@@ -128,7 +128,7 @@ def run_fbs(version, dbDir, outDir, metricDataPath):
     dbRuns = show_opsims(dbDir)[:]
     
     # define metric parameters for DDF
-    src_mags = {'u':[23.15], 'g':[23],'r': [22.75]}
+    src_mags = {'u':[24.15], 'r': [23.85]}
     my_bins = np.logspace(-2, np.log10(3650), 21)
     my_weights = np.full(20, 1/20)
 
